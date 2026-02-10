@@ -182,7 +182,9 @@ export default async function Home({ searchParams }: HomePageProps) {
               key={review.id}
               className="soft-card rounded-3xl p-5 transition hover:-translate-y-1 hover:shadow-md"
             >
-              <p className="text-base text-zinc-800 dark:text-zinc-100">"{review.content}"</p>
+              <p className="text-base text-zinc-800 dark:text-zinc-100">
+                &quot;{review.content}&quot;
+              </p>
               <p className="mt-4 text-sm font-semibold text-zinc-900 dark:text-zinc-100">
                 {review.customer}
               </p>

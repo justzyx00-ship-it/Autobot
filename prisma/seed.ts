@@ -1,4 +1,5 @@
 import { hash } from "bcryptjs";
+import { PrismaBetterSqlite3 } from "@prisma/adapter-better-sqlite3";
 import {
   OrderStatus,
   Prisma,
@@ -10,7 +11,15 @@ import {
   WalletTransactionType,
 } from "@prisma/client";
 
-const prisma = new PrismaClient();
+const databaseUrl = process.env.DATABASE_URL;
+
+if (!databaseUrl) {
+  throw new Error("DATABASE_URL is not configured");
+}
+
+const prisma = new PrismaClient({
+  adapter: new PrismaBetterSqlite3({ url: databaseUrl }),
+});
 
 async function main() {
   const adminPassword = await hash("Admin@12345", 12);

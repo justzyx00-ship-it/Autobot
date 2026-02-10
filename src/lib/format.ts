@@ -1,8 +1,9 @@
-import { Decimal } from "@prisma/client/runtime/library";
 import { format } from "date-fns";
 import { vi } from "date-fns/locale";
 
-export function formatCurrency(amount: Decimal | number | string) {
+type NumericLike = number | string | { toString(): string };
+
+export function formatCurrency(amount: NumericLike) {
   const value = typeof amount === "number" ? amount : Number(amount);
   return new Intl.NumberFormat("vi-VN", {
     style: "currency",
