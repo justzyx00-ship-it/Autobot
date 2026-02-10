@@ -1,0 +1,178 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+}
+
+enum Role {
+  USER
+  ADMIN
+}
+
+enum ThemeMode {
+  LIGHT
+  DARK
+}
+
+enum OrderStatus {
+  PENDING_PAYMENT
+  PROCESSING
+  COMPLETED
+}
+
+enum TopupMethod {
+  BANK_QR
+  CARD
+}
+
+enum TopupStatus {
+  PROCESSING
+  SUCCESS
+  FAILED
+}
+
+enum WalletTransactionType {
+  TOPUP
+  PURCHASE
+  REFUND
+  ADJUSTMENT
+}
+
+enum TicketStatus {
+  OPEN
+  IN_PROGRESS
+  RESOLVED
+}
+
+model User {
+  id                 String              @id @default(cuid())
+  email              String              @unique
+  username           String              @unique
+  passwordHash       String
+  fullName           String?
+  role               Role                @default(USER)
+  theme              ThemeMode           @default(DARK)
+  balance            Decimal             @default(0)
+  createdAt          DateTime            @default(now())
+  updatedAt          DateTime            @updatedAt
+  orders             Order[]
+  topups             Topup[]
+  walletTransactions WalletTransaction[]
+  notifications      Notification[]
+  supportTickets     SupportTicket[]
+}
+
+model Product {
+  id               String    @id @default(cuid())
+  slug             String    @unique
+  name             String
+  category         String
+  duration         String
+  price            Decimal
+  shortDescription String
+  description      String
+  icon             String
+  isHot            Boolean   @default(false)
+  isActive         Boolean   @default(true)
+  autoDelivery     Boolean   @default(true)
+  deliveryTemplate String?
+  soldCount        Int       @default(0)
+  createdAt        DateTime  @default(now())
+  updatedAt        DateTime  @updatedAt
+  orders           Order[]
+
+  @@index([category, isActive])
+}
+
+model Order {
+  id          String      @id @default(cuid())
+  userId      String
+  productId   String
+  price       Decimal
+  amount      Decimal
+  status      OrderStatus @default(PENDING_PAYMENT)
+  deliveryData String?
+  note        String?
+  createdAt   DateTime    @default(now())
+  updatedAt   DateTime    @updatedAt
+  completedAt DateTime?
+  user        User        @relation(fields: [userId], references: [id], onDelete: Cascade)
+  product     Product     @relation(fields: [productId], references: [id], onDelete: Restrict)
+
+  @@index([userId, createdAt])
+  @@index([status, createdAt])
+}
+
+model Topup {
+  id            String      @id @default(cuid())
+  userId        String
+  method        TopupMethod
+  provider      String?
+  amount        Decimal
+  status        TopupStatus @default(PROCESSING)
+  referenceCode String?
+  note          String?
+  createdAt     DateTime    @default(now())
+  updatedAt     DateTime    @updatedAt
+  processedAt   DateTime?
+  user          User        @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId, createdAt])
+  @@index([status, createdAt])
+}
+
+model WalletTransaction {
+  id           String                @id @default(cuid())
+  userId       String
+  amount       Decimal
+  balanceAfter Decimal
+  type         WalletTransactionType
+  description  String
+  referenceId  String?
+  createdAt    DateTime              @default(now())
+  user         User                  @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId, createdAt])
+}
+
+model Notification {
+  id        String   @id @default(cuid())
+  userId    String
+  title     String
+  message   String
+  isRead    Boolean  @default(false)
+  createdAt DateTime @default(now())
+  readAt    DateTime?
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId, isRead, createdAt])
+}
+
+model SupportTicket {
+  id        String       @id @default(cuid())
+  userId    String?
+  name      String
+  email     String
+  subject   String
+  message   String
+  status    TicketStatus @default(OPEN)
+  createdAt DateTime     @default(now())
+  updatedAt DateTime     @updatedAt
+  user      User?        @relation(fields: [userId], references: [id], onDelete: SetNull)
+
+  @@index([createdAt, status])
+}
+
+model Review {
+  id         String   @id @default(cuid())
+  customer   String
+  content    String
+  rating     Int
+  service    String
+  isFeatured Boolean  @default(true)
+  createdAt  DateTime @default(now())
+
+  @@index([isFeatured, createdAt])
+}
